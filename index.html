@@ -510,6 +510,7 @@
 
   <script>
     const IDR = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
+    const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyMRyx7CqwtwMNcS2hXafAievNvPLE-n1JQoG1GGO5vJgYHKj8lisoApXNZnENrRYOR/exec";
     const state = {
       products: [],
       sales: [],
@@ -517,7 +518,7 @@
       cart: {},
       cat: "Semua",
       query: "",
-      apiUrl: localStorage.getItem("kasir.apiUrl") || "",
+      apiUrl: localStorage.getItem("kasir.apiUrl") || DEFAULT_API_URL,
       theme: localStorage.getItem("kasir.theme") || "dark"
     };
 
@@ -547,13 +548,20 @@
       });
     }
     function getProductImage(p) {
-      if (p.imageUrl) return p.imageUrl;
-      // fallback sesuai kategori
+      if (p && p.imageUrl) return p.imageUrl;
       const food = /mie|nasi|goreng|roti|bakso|burger|makan|food|chicken|ayam|snack|bakery/i;
       const drink = /air|minum|teh|kopi|coffee|es kopi|drink|juice|susu|lemon|latte|tea/i;
-      if (food.test(p.category)||food.test(p.name)) return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop";
-      if (drink.test(p.category)||drink.test(p.name)) return "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=400&auto=format&fit=crop";
+      const hay = ((p && p.category) || "") + " " + ((p && p.name) || "");
+      if (food.test(hay)) return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop";
+      if (drink.test(hay)) return "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=400&auto=format&fit=crop";
       return "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=400&auto=format&fit=crop";
+    }
+
+    function stockClass(n) {
+      const stock = Number(n) || 0;
+      if (stock <= 0) return "out";
+      if (stock <= 5) return "low";
+      return "ok";
     }
 
     function toast(msg, err) {
