@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Kasir</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c100e;
+      --panel: #121714;
+      --surface: #181e1b;
+      --surface-2: #1f2723;
+      --ink: #eef3ef;
+      --muted: #9aa89f;
+      --faint: #6d7a71;
+      --line: rgba(255,255,255,0.07);
+      --line-strong: rgba(255,255,255,0.12);
+      --accent: #3dcc7a;
+      --accent-dim: #1f8a4c;
+      --accent-ink: #062012;
+      --danger: #ef6b63;
+      --warn: #e0b44b;
+      --shadow: 0 16px 40px rgba(0,0,0,0.35);
+      --radius: 10px;
+      --font: "IBM Plex Sans", system-ui, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    [data-theme="light"] {
+      --bg: #f3f5f3;
+      --panel: #ffffff;
+      --surface: #ffffff;
+      --surface-2: #eef1ee;
+      --ink: #142018;
+      --muted: #4d5b52;
+      --faint: #7a877e;
+      --line: rgba(20,32,24,0.1);
+      --line-strong: rgba(20,32,24,0.16);
+      --accent: #1f8a4c;
+      --accent-dim: #146338;
+      --accent-ink: #ffffff;
+      --shadow: 0 12px 28px rgba(20,32,24,0.08);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+    button, input, select, textarea { font-family: inherit; color: inherit; }
+    button { cursor: pointer; }
+    .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+    .app {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 220px 1fr 360px;
+      grid-template-rows: 56px 1fr;
+      grid-template-areas:
+        "top top top"
+        "nav main cart";
+    }
+    header {
+      grid-area: top;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 180px;
+    }
+    .mark {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--accent);
+      color: var(--accent-ink);
+      display: grid; place-items: center;
+      font-weight: 600; font-size: 13px;
+    }
+    .brand h1 { margin: 0; font-size: 14px; font-weight: 600; }
+    .brand small { color: var(--muted); font-size: 11px; display: block; }
+    .search {
+      flex: 1;
+      position: relative;
+      max-width: 520px;
+    }
+    .search input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 12px 9px 34px;
+      outline: none;
+    }
+    .search input:focus { border-color: var(--accent-dim); }
+    .search .hint {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--faint); font-size: 12px; pointer-events: none;
+    }
+    .header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+    .chip, .icon-btn, .btn {
+      border: 1px solid var(--line-strong);
+      background: var(--surface-2);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-ink);
+      border-color: transparent;
+      font-weight: 600;
+    }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-ghost { background: transparent; }
+    .btn-danger { color: var(--danger); border-color: rgba(239,107,99,.35); background: transparent; }
+    aside.nav {
+      grid-area: nav;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-btn {
+      text-align: left;
+      background: transparent;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .nav-btn.active, .nav-btn:hover { background: var(--surface-2); color: var(--ink); }
+    .nav-foot { margin-top: auto; font-size: 11px; color: var(--faint); padding: 8px; }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px;
+      background: var(--warn);
+    }
+    .status-dot.ok { background: var(--accent); }
+    .status-dot.err { background: var(--danger); }
+    main {
+      grid-area: main;
+      overflow: auto;
+      padding: 16px;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .toolbar {
+      display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .cats { display: flex; gap: 6px; flex-wrap: wrap; }
+    .cat {
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .cat.active { color: var(--ink); border-color: var(--accent); background: rgba(61,204,122,.12); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+      gap: 10px;
+    }
+    .product {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      text-align: left;
+      min-height: 118px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .product:hover { border-color: var(--accent-dim); }
+    .product:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .product .name { font-weight: 600; font-size: 14px; }
+    .product .meta { color: var(--faint); font-size: 11px; }
+    .product .price { margin-top: auto; font-family: var(--mono); font-size: 15px; font-weight: 600; }
+    .product .stock { font-size: 11px; color: var(--muted); }
+    .product.out { opacity: 0.45; }
+    .cart {
+      grid-area: cart;
+      border-left: 1px solid var(--line);
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .cart h2 {
+      margin: 0; padding: 16px 16px 8px;
+      font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted);
+    }
+    .cart-list { flex: 1; overflow: auto; padding: 0 8px 8px; }
+    .empty { color: var(--faint); padding: 24px 16px; font-size: 13px; }
+    .line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 4px 8px;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+    }
+    .line .nm { font-size: 13px; font-weight: 500; }
+    .qty-row { display: flex; align-items: center; gap: 6px; }
+    .qty-row button {
+      width: 28px; height: 28px; border-radius: 6px;
+      border: 1px solid var(--line-strong); background: var(--surface-2);
+    }
+    .line .amt { font-family: var(--mono); font-size: 13px; text-align: right; }
+    .pay {
+      border-top: 1px solid var(--line);
+      padding: 12px 16px 16px;
+      display: grid;
+      gap: 8px;
+    }
+    .row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+    .row.total { color: var(--ink); font-size: 18px; font-weight: 600; }
+    .row.total span:last-child { font-family: var(--mono); }
+    .pay select, .pay input, .form input, .form select, textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 10px;
+      outline: none;
+    }
+    .pay .btn-primary { width: 100%; padding: 12px; font-size: 14px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--faint); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+    td.num, th.num { text-align: right; font-family: var(--mono); }
+    .form { display: grid; gap: 10px; max-width: 520px; }
+    .form label { font-size: 12px; color: var(--muted); display: grid; gap: 6px; }
+    .toast {
+      position: fixed; right: 16px; bottom: 16px; z-index: 40;
+      background: var(--surface); border: 1px solid var(--line-strong);
+      padding: 10px 14px; border-radius: 8px; box-shadow: var(--shadow);
+      font-size: 13px; max-width: 320px;
+    }
+    .toast.err { border-color: var(--danger); }
+    .modal-bg {
+      position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      display: none; place-items: center; z-index: 30; padding: 16px;
+    }
+    .modal-bg.open { display: grid; }
+    .modal {
+      background: var(--panel); border: 1px solid var(--line-strong);
+      border-radius: 12px; padding: 18px; width: min(420px, 100%);
+      box-shadow: var(--shadow);
+    }
+    .receipt { font-family: var(--mono); font-size: 12px; white-space: pre-wrap; background: var(--surface-2); padding: 12px; border-radius: 8px; }
+    .banner {
+      display: none; margin-bottom: 12px; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid var(--warn); color: var(--ink); background: rgba(224,180,75,.1); font-size: 13px;
+    }
+    .banner.show { display: block; }
+    .banner code { font-family: var(--mono); font-size: 11px; }
+    @media (max-width: 1024px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 56px auto 1fr auto;
+        grid-template-areas:
+          "top"
+          "nav"
+          "main"
+          "cart";
+        height: auto;
+        min-height: 100%;
+      }
+      aside.nav { flex-direction: row; overflow: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .nav-foot { display: none; }
+      .cart { border-left: 0; border-top: 1px solid var(--line); max-height: 48vh; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="mark">K</div>
+        <div>
+          <h1 id="storeName">Kasir</h1>
+          <small>POS · Google Sheets</small>
+        </div>
+      </div>
+      <div class="search">
+        <span class="hint">/</span>
+        <input id="q" type="search" placeholder="Cari produk atau SKU" autocomplete="off" />
+      </div>
+      <div class="header-actions">
+        <span class="chip"><span id="statusDot" class="status-dot"></span><span id="statusText">Menghubungkan</span></span>
+        <button class="icon-btn" id="themeBtn" type="button" title="Tema">Aa</button>
+      </div>
+    </header>
+
+    <aside class="nav">
+      <button class="nav-btn active" data-view="pos" type="button">Kasir</button>
+      <button class="nav-btn" data-view="products" type="button">Produk</button>
+      <button class="nav-btn" data-view="sales" type="button">Riwayat</button>
+      <button class="nav-btn" data-view="settings" type="button">Pengaturan</button>
+      <div class="nav-foot" id="sheetLink"></div>
+    </aside>
+
+    <main>
+      <div id="configBanner" class="banner">
+        Frontend Vercel belum terhubung ke backend. Isi URL Web App Google Apps Script di Pengaturan,
+        atau buka file ini lewat deploy Apps Script. Contoh:
+        <code>https://script.google.com/macros/s/…/exec</code>
+      </div>
+
+      <section id="view-pos" class="panel active">
+        <div class="toolbar">
+          <div class="cats" id="cats"></div>
+        </div>
+        <div class="grid" id="productGrid"></div>
+      </section>
+
+      <section id="view-products" class="panel">
+        <div class="toolbar">
+          <button class="btn btn-primary" id="newProductBtn" type="button">Produk baru</button>
+        </div>
+        <div class="form" id="productFormWrap" hidden>
+          <input type="hidden" id="pId" />
+          <label>Nama<input id="pName" /></label>
+          <label>SKU<input id="pSku" /></label>
+          <label>Kategori<input id="pCat" /></label>
+          <label>Harga (Rp)<input id="pPrice" type="number" min="0" step="100" /></label>
+          <label>Stok<input id="pStock" type="number" min="0" step="1" /></label>
+          <label>Aktif
+            <select id="pActive"><option value="true">Ya</option><option value="false">Tidak</option></select>
+          </label>
+          <div class="toolbar">
+            <button class="btn btn-primary" id="saveProductBtn" type="button">Simpan</button>
+            <button class="btn btn-ghost" id="cancelProductBtn" type="button">Batal</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Produk</th><th>SKU</th><th>Kategori</th><th class="num">Harga</th><th class="num">Stok</th><th></th></tr>
+          </thead>
+          <tbody id="productRows"></tbody>
+        </table>
+      </section>
+
+      <section id="view-sales" class="panel">
+        <table>
+          <thead>
+            <tr><th>Waktu</th><th>ID</th><th>Metode</th><th class="num">Total</th><th></th></tr>
+          </thead>
+          <tbody id="saleRows"></tbody>
+        </table>
+      </section>
+
+      <section id="view-settings" class="panel">
+        <form class="form" id="settingsForm">
+          <label>Nama toko<input id="sName" /></label>
+          <label>Pajak %<input id="sTax" type="number" min="0" max="100" step="0.1" /></label>
+          <label>URL Web App Apps Script (untuk Vercel)
+            <input id="sApi" placeholder="https://script.google.com/macros/s/…/exec" />
+          </label>
+          <p style="color:var(--muted);font-size:13px;margin:0">
+            Kosongkan URL jika halaman ini di-host oleh Apps Script sendiri
+            (<code class="mono">google.script.run</code>).
+          </p>
+          <button class="btn btn-primary" type="submit">Simpan pengaturan</button>
+        </form>
+      </section>
+    </main>
+
+    <aside class="cart">
+      <h2>Keranjang</h2>
+      <div class="cart-list" id="cartList"><div class="empty">Belum ada item. Klik produk atau ketik pencarian.</div></div>
+      <div class="pay">
+        <div class="row"><span>Subtotal</span><span class="mono" id="subtotal">Rp 0</span></div>
+        <div class="row"><span>Pajak <span id="taxLabel">0%</span></span><span class="mono" id="taxAmt">Rp 0</span></div>
+        <div class="row total"><span>Total</span><span id="total">Rp 0</span></div>
+        <select id="payMethod">
+          <option value="cash">Tunai</option>
+          <option value="qris">QRIS</option>
+          <option value="transfer">Transfer</option>
+        </select>
+        <input id="cashIn" type="number" min="0" step="100" placeholder="Uang diterima" />
+        <div class="row"><span>Kembalian</span><span class="mono" id="change">Rp 0</span></div>
+        <button class="btn btn-primary" id="payBtn" type="button" disabled>Bayar</button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="modal-bg" id="modal">
+    <div class="modal">
+      <h3 style="margin:0 0 10px;font-size:16px">Struk</h3>
+      <div class="receipt" id="receipt"></div>
+      <div class="toolbar" style="margin-top:12px">
+        <button class="btn btn-primary" id="printBtn" type="button">Cetak</button>
+        <button class="btn btn-ghost" id="closeModal" type="button">Tutup</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script>
+    const IDR = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
+    const state = {
+      products: [],
+      sales: [],
+      settings: { storeName: "Kasir", taxRate: 0, currency: "IDR" },
+      cart: {},
+      cat: "Semua",
+      query: "",
+      apiUrl: localStorage.getItem("kasir.apiUrl") || "",
+      theme: localStorage.getItem("kasir.theme") || "dark"
+    };
+
+    const $ = (id) => document.getElementById(id);
+    document.documentElement.setAttribute("data-theme", state.theme);
+
+    function toast(msg, err) {
+      const el = $("toast");
+      el.textContent = msg;
+      el.classList.toggle("err", !!err);
+      el.hidden = false;
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => { el.hidden = true; }, 3200);
+    }
+
+    function setStatus(kind, text) {
+      $("statusDot").className = "status-dot " + (kind || "");
+      $("statusText").textContent = text;
+    }
+
+    function hasGasRun() {
+      return typeof google !== "undefined" && google.script && google.script.run;
+    }
+
+    function call(action, payload) {
+      payload = payload || {};
+      if (hasGasRun()) {
+        const fn = {
+          health: "apiHealth",
+          bootstrap: "apiBootstrap",
+          listProducts: "apiListProducts",
+          saveProduct: "apiSaveProduct",
+          deleteProduct: "apiDeleteProduct",
+          checkout: "apiCheckout",
+          listSales: "apiListSales",
+          getSale: "apiGetSale",
+          saveSettings: "apiSaveSettings"
+        }[action];
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler((res) => {
+              if (res && res.ok === false) reject(new Error(res.error || "Gagal"));
+              else resolve(res && res.data !== undefined ? res.data : res);
+            })
+            .withFailureHandler((e) => reject(new Error(e && e.message ? e.message : String(e))))
+            [fn](payload);
+        });
+      }
+      if (!state.apiUrl) {
+        return Promise.reject(new Error("URL Web App belum diisi."));
+      }
+      const url = state.apiUrl.replace(/\/+$/, "") + "?api=1";
+      return fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: action, payload: payload })
+      }).then(async (r) => {
+        const text = await r.text();
+        let json;
+        try { json = JSON.parse(text); }
+        catch (e) { throw new Error("Respons bukan JSON. Cek URL deploy Apps Script."); }
+        if (!json.ok) throw new Error(json.error || "Gagal");
+        return json.data;
+      });
+    }
+
+    function money(n) { return IDR.format(Math.round(Number(n) || 0)).replace("IDR", "Rp"); }
+
+    function cartItems() {
+      return Object.keys(state.cart).map((id) => {
+        const p = state.products.find((x) => x.id === id);
+        const qty = state.cart[id];
+        return p ? { product: p, qty: qty, lineTotal: p.price * qty } : null;
+      }).filter(Boolean);
+    }
+
+    function totals() {
+      const items = cartItems();
+      const subtotal = items.reduce((s, i) => s + i.lineTotal, 0);
+      const taxRate = Number(state.settings.taxRate) || 0;
+      const taxAmount = Math.round(subtotal * taxRate / 100);
+      const total = subtotal + taxAmount;
+      return { items, subtotal, taxRate, taxAmount, total };
+    }
+
+    function renderCart() {
+      const t = totals();
+      const list = $("cartList");
+      if (!t.items.length) {
+        list.innerHTML = '<div class="empty">Belum ada item. Klik produk atau ketik pencarian.</div>';
+      } else {
+        list.innerHTML = t.items.map((i) => `
+          <div class="line">
+            <div>
+              <div class="nm"></div>
+              <div class="qty-row">
+                <button type="button" data-dec="${i.product.id}">−</button>
+                <span class="mono">${i.qty}</span>
+                <button type="button" data-inc="${i.product.id}">+</button>
+                <button type="button" class="btn-ghost" data-rm="${i.product.id}">hapus</button>
+              </div>
+            </div>
+            <div class="amt">${money(i.lineTotal)}</div>
+          </div>
+        `).join("");
+        Array.from(list.querySelectorAll(".nm")).forEach((el, idx) => {
+          el.textContent = t.items[idx].product.name;
+        });
+      }
+      $("subtotal").textContent = money(t.subtotal);
+      $("taxLabel").textContent = t.taxRate + "%";
+      $("taxAmt").textContent = money(t.taxAmount);
+      $("total").textContent = money(t.total);
+      const cash = Number($("cashIn").value) || 0;
+      const method = $("payMethod").value;
+      const change = method === "cash" ? Math.max(0, cash - t.total) : 0;
+      $("change").textContent = money(change);
+      $("payBtn").disabled = !t.items.length || (method === "cash" && cash < t.total);
+    }
+
+    function filteredProducts() {
+      const q = state.query.trim().toLowerCase();
+      return state.products.filter((p) => {
+        if (!p.active) return false;
+        if (state.cat !== "Semua" && p.category !== state.cat) return false;
+        if (!q) return true;
+        return (p.name + " " + p.sku + " " + p.category).toLowerCase().includes(q);
+      });
+    }
+
+    function renderGrid() {
+      const cats = ["Semua"].concat(Array.from(new Set(state.products.map((p) => p.category).filter(Boolean))).sort());
+      $("cats").innerHTML = cats.map((c) => `<button class="cat${c === state.cat ? " active" : ""}" data-cat="${c}" type="button"></button>`).join("");
+      Array.from($("cats").children).forEach((btn, i) => { btn.textContent = cats[i]; });
+      const items = filteredProducts();
+      $("productGrid").innerHTML = items.map((p) => `
+        <button class="product${p.stock <= 0 ? " out" : ""}" data-add="${p.id}" type="button">
+          <div class="name"></div>
+          <div class="meta"></div>
+          <div class="price">${money(p.price)}</div>
+          <div class="stock">Stok ${p.stock}</div>
+        </button>
+      `).join("") || '<div class="empty">Tidak ada produk.</div>';
+      Array.from($("productGrid").querySelectorAll(".product")).forEach((el, i) => {
+        el.querySelector(".name").textContent = items[i].name;
+        el.querySelector(".meta").textContent = items[i].sku || items[i].category || "";
+      });
+    }
+
+    function renderProductsTable() {
+      const rows = state.products;
+      $("productRows").innerHTML = rows.map((p) => `
+        <tr>
+          <td></td><td class="mono"></td><td></td>
+          <td class="num">${money(p.price)}</td>
+          <td class="num">${p.stock}</td>
+          <td>
+            <button class="btn btn-ghost" data-edit="${p.id}" type="button">Ubah</button>
+            <button class="btn btn-danger" data-del="${p.id}" type="button">Nonaktif</button>
+          </td>
+        </tr>
+      `).join("");
+      Array.from($("productRows").querySelectorAll("tr")).forEach((tr, i) => {
+        const tds = tr.children;
+        tds[0].textContent = rows[i].name + (rows[i].active ? "" : " (nonaktif)");
+        tds[1].textContent = rows[i].sku;
+        tds[2].textContent = rows[i].category;
+      });
+    }
+
+    function renderSales() {
+      const rows = state.sales;
+      $("saleRows").innerHTML = rows.map((s) => `
+        <tr>
+          <td></td><td class="mono"></td><td></td>
+          <td class="num">${money(s.total)}</td>
+          <td><button class="btn btn-ghost" data-sale="${s.id}" type="button">Struk</button></td>
+        </tr>
+      `).join("");
+      Array.from($("saleRows").querySelectorAll("tr")).forEach((tr, i) => {
+        tr.children[0].textContent = formatTime(rows[i].createdAt);
+        tr.children[1].textContent = rows[i].id;
+        tr.children[2].textContent = rows[i].paymentMethod;
+      });
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso || "";
+      return d.toLocaleString("id-ID", { hour12: false });
+    }
+
+    function addToCart(id) {
+      const p = state.products.find((x) => x.id === id);
+      if (!p || p.stock <= 0) { toast("Stok habis", true); return; }
+      const next = (state.cart[id] || 0) + 1;
+      if (next > p.stock) { toast("Melebihi stok", true); return; }
+      state.cart[id] = next;
+      renderCart();
+    }
+
+    function showView(name) {
+      document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
+      $("view-" + name).classList.add("active");
+    }
+
+    function applySettingsForm() {
+      $("sName").value = state.settings.storeName || "";
+      $("sTax").value = state.settings.taxRate || 0;
+      $("sApi").value = state.apiUrl;
+      $("storeName").textContent = state.settings.storeName || "Kasir";
+      if (state.settings.spreadsheetUrl) {
+        $("sheetLink").innerHTML = "";
+        const a = document.createElement("a");
+        a.href = state.settings.spreadsheetUrl;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = "Buka Spreadsheet";
+        a.style.color = "var(--accent)";
+        $("sheetLink").appendChild(a);
+      }
+    }
+
+    function receiptText(sale) {
+      const lines = [];
+      lines.push(state.settings.storeName || "Kasir");
+      lines.push(formatTime(sale.createdAt));
+      lines.push(sale.id);
+      lines.push("----------------");
+      (sale.items || []).forEach((it) => {
+        lines.push(it.name);
+        lines.push("  " + it.qty + " x " + money(it.price) + "  " + money(it.lineTotal));
+      });
+      lines.push("----------------");
+      lines.push("Subtotal  " + money(sale.subtotal));
+      lines.push("Pajak     " + money(sale.taxAmount));
+      lines.push("TOTAL     " + money(sale.total));
+      lines.push((sale.paymentMethod || "") + "  " + money(sale.cashReceived));
+      lines.push("Kembali   " + money(sale.change));
+      return lines.join("\n");
+    }
+
+    function openReceipt(sale) {
+      $("receipt").textContent = receiptText(sale);
+      $("modal").classList.add("open");
+    }
+
+    async function boot() {
+      $("configBanner").classList.toggle("show", !hasGasRun() && !state.apiUrl);
+      if (!hasGasRun() && !state.apiUrl) {
+        setStatus("err", "Belum terhubung");
+        renderGrid(); renderCart(); applySettingsForm();
+        return;
+      }
+      try {
+        setStatus("", "Menghubungkan");
+        const data = await call("bootstrap");
+        state.settings = data.settings || state.settings;
+        state.products = data.products || [];
+        state.sales = data.sales || [];
+        applySettingsForm();
+        renderGrid(); renderProductsTable(); renderSales(); renderCart();
+        setStatus("ok", "Terhubung");
+      } catch (e) {
+        setStatus("err", "Gagal");
+        toast(e.message, true);
+        $("configBanner").classList.add("show");
+      }
+    }
+
+    document.querySelector(".nav").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-view]");
+      if (btn) showView(btn.dataset.view);
+    });
+    $("cats").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-cat]");
+      if (!btn) return;
+      state.cat = btn.dataset.cat;
+      renderGrid();
+    });
+    $("productGrid").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-add]");
+      if (btn) addToCart(btn.dataset.add);
+    });
+    $("cartList").addEventListener("click", (e) => {
+      const inc = e.target.closest("[data-inc]");
+      const dec = e.target.closest("[data-dec]");
+      const rm = e.target.closest("[data-rm]");
+      if (inc) addToCart(inc.dataset.inc);
+      if (dec) {
+        const id = dec.dataset.dec;
+        state.cart[id] = Math.max(0, (state.cart[id] || 0) - 1);
+        if (!state.cart[id]) delete state.cart[id];
+        renderCart();
+      }
+      if (rm) { delete state.cart[rm.dataset.rm]; renderCart(); }
+    });
+    $("q").addEventListener("input", () => { state.query = $("q").value; renderGrid(); });
+    $("cashIn").addEventListener("input", renderCart);
+    $("payMethod").addEventListener("change", () => {
+      $("cashIn").hidden = $("payMethod").value !== "cash";
+      renderCart();
+    });
+    $("themeBtn").addEventListener("click", () => {
+      state.theme = state.theme === "dark" ? "light" : "dark";
+      localStorage.setItem("kasir.theme", state.theme);
+      document.documentElement.setAttribute("data-theme", state.theme);
+    });
+    $("payBtn").addEventListener("click", async () => {
+      const t = totals();
+      const method = $("payMethod").value;
+      try {
+        $("payBtn").disabled = true;
+        const sale = await call("checkout", {
+          items: t.items.map((i) => ({ productId: i.product.id, qty: i.qty })),
+          paymentMethod: method,
+          cashReceived: method === "cash" ? Number($("cashIn").value) || 0 : t.total
+        });
+        state.cart = {};
+        $("cashIn").value = "";
+        openReceipt(sale);
+        await boot();
+      } catch (e) {
+        toast(e.message, true);
+        renderCart();
+      }
+    });
+    $("newProductBtn").addEventListener("click", () => {
+      $("productFormWrap").hidden = false;
+      $("pId").value = ""; $("pName").value = ""; $("pSku").value = "";
+      $("pCat").value = ""; $("pPrice").value = ""; $("pStock").value = "0"; $("pActive").value = "true";
+    });
+    $("cancelProductBtn").addEventListener("click", () => { $("productFormWrap").hidden = true; });
+    $("saveProductBtn").addEventListener("click", async () => {
+      try {
+        await call("saveProduct", {
+          id: $("pId").value || undefined,
+          name: $("pName").value,
+          sku: $("pSku").value,
+          category: $("pCat").value,
+          price: Number($("pPrice").value),
+          stock: Number($("pStock").value),
+          active: $("pActive").value === "true"
+        });
+        $("productFormWrap").hidden = true;
+        toast("Produk disimpan");
+        await boot();
+      } catch (e) { toast(e.message, true); }
+    });
+    $("productRows").addEventListener("click", async (e) => {
+      const edit = e.target.closest("[data-edit]");
+      const del = e.target.closest("[data-del]");
+      if (edit) {
+        const p = state.products.find((x) => x.id === edit.dataset.edit);
+        if (!p) return;
+        $("productFormWrap").hidden = false;
+        $("pId").value = p.id; $("pName").value = p.name; $("pSku").value = p.sku;
+        $("pCat").value = p.category; $("pPrice").value = p.price; $("pStock").value = p.stock;
+        $("pActive").value = p.active ? "true" : "false";
+      }
+      if (del) {
+        if (!confirm("Nonaktifkan produk ini?")) return;
+        try { await call("deleteProduct", { id: del.dataset.del }); await boot(); }
+        catch (err) { toast(err.message, true); }
+      }
+    });
+    $("saleRows").addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-sale]");
+      if (!btn) return;
+      try { openReceipt(await call("getSale", { id: btn.dataset.sale })); }
+      catch (err) { toast(err.message, true); }
+    });
+    $("settingsForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      state.apiUrl = $("sApi").value.trim();
+      localStorage.setItem("kasir.apiUrl", state.apiUrl);
+      try {
+        if (hasGasRun() || state.apiUrl) {
+          const s = await call("saveSettings", {
+            storeName: $("sName").value,
+            taxRate: Number($("sTax").value)
+          });
+          state.settings = s;
+        }
+        toast("Pengaturan disimpan");
+        await boot();
+      } catch (err) { toast(err.message, true); }
+    });
+    $("closeModal").addEventListener("click", () => $("modal").classList.remove("open"));
+    $("printBtn").addEventListener("click", () => window.print());
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) $("modal").classList.remove("open"); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
+        e.preventDefault(); $("q").focus();
+      }
+      if (e.key === "Escape") $("modal").classList.remove("open");
+    });
+
+    boot();
+  </script>
+</body>
+</html>

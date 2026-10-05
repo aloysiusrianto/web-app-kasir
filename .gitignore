@@ -1,0 +1,11 @@
+.clasp.json
+.clasprc.json
+node_modules/
+.env
+.env.local
+.DS_Store
+Thumbs.db
+*.log
+.vercel
+.idea/
+.vscode/
